@@ -5,6 +5,8 @@ use std::fmt::Display;
 use generate::Grammar;
 use rand::{Rng, seq::IndexedRandom};
 
+pub type NodeTree = (NodePtr, NodePtr, NodePtr);
+
 pub type NodePtr = Box<Node>;
 
 /// A simple enum which holds the types of nodes available

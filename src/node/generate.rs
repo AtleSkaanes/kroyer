@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use super::{Node, NodePtr, NodeType};
+use super::{Node, NodeTree, NodeType};
 
 /// Holds the node and the weigth of the node in the tree
 pub struct Grammar {
@@ -32,7 +32,7 @@ impl Grammar {
     }
 }
 
-pub fn generate_tree(grammar: &mut Grammar, depth: usize) -> (NodePtr, NodePtr, NodePtr) {
+pub fn generate_tree(grammar: &mut Grammar, depth: usize) -> NodeTree {
     (
         Node::gen_rand(grammar, depth),
         Node::gen_rand(grammar, depth),

@@ -3,6 +3,7 @@ use node::{
     generate::{self, Grammar},
 };
 
+mod img;
 pub mod node;
 
 fn main() {
@@ -15,8 +16,9 @@ fn main() {
     ]);
 
     let tree = generate::generate_tree(&mut grammar, 4);
-
     println!("## R:\n{}\n## G:\n{}\n## B:\n{}", tree.0, tree.1, tree.2);
 
-    println!("Hello, world!");
+    let img = img::gen_img(255, 255, &tree);
+
+    img.save("test.png").unwrap();
 }
