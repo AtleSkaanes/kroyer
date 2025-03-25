@@ -1,14 +1,14 @@
-use std::{f64::consts::TAU, fs::OpenOptions, time::Duration};
+use std::{f64::consts::TAU, fs::OpenOptions, path::PathBuf, time::Duration};
 
 use image::{ImageBuffer, Rgba, codecs::gif::Repeat};
 
 use crate::node::NodePtr;
 
-pub fn gen_img(path: &str, width: u32, height: u32, tree: &(NodePtr, NodePtr, NodePtr)) {
+pub fn gen_img(path: PathBuf, width: u32, height: u32, tree: &(NodePtr, NodePtr, NodePtr)) {
     let img = get_img(width, height, 0., tree);
-    if let Err(e) = img.save(path) {
+    if let Err(e) = img.save(&path) {
         eprintln!(
-            "[ERROR]: Failed to save image to \"{}\".\nDetails: {}",
+            "[ERROR]: Failed to save image to {:?}.\nDetails: {}",
             path, e
         );
         std::process::exit(1);
@@ -38,7 +38,7 @@ pub fn get_img(
 }
 
 pub fn gen_gif(
-    path: &str,
+    path: PathBuf,
     width: u32,
     height: u32,
     frames: u32,
@@ -48,14 +48,11 @@ pub fn gen_gif(
         .write(true)
         .create(true)
         .truncate(true)
-        .open(path)
+        .open(&path)
     {
         Ok(f) => f,
         Err(e) => {
-            eprintln!(
-                "[ERROR]: Failed to create file \"{}\".\nDetails: {}",
-                path, e
-            );
+            eprintln!("[ERROR]: Failed to create file {:?}.\nDetails: {}", path, e);
             std::process::exit(1);
         }
     };

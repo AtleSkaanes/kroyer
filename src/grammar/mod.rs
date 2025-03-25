@@ -1,20 +1,21 @@
-use std::{fmt::Display, fs::OpenOptions, io::Read};
+use std::{fmt::Display, fs::OpenOptions, io::Read, path::PathBuf};
 
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha20Rng;
 
 use crate::node::NodeType;
 
 /// Holds the node and the weigth of the node in the tree
 pub struct Grammar {
     pub rules: Vec<(NodeType, usize)>,
-    pub rng: rand::prelude::ThreadRng,
+    pub rng: ChaCha20Rng,
 }
 
 impl Grammar {
     pub fn new(rules: Vec<(NodeType, usize)>) -> Self {
         Self {
             rules,
-            rng: rand::rng(),
+            rng: ChaCha20Rng::from_os_rng(),
         }
     }
 
@@ -87,12 +88,12 @@ impl Grammar {
     }
 
     /// Parses a Grammar struct from a given file, via `Grammar::parse_from_str()`
-    pub fn parse_from_file(path: &str) -> Self {
-        let mut file = match OpenOptions::new().read(true).open(path) {
+    pub fn parse_from_file(path: PathBuf) -> Self {
+        let mut file = match OpenOptions::new().read(true).open(&path) {
             Ok(f) => f,
             Err(e) => {
                 eprintln!(
-                    "[ERROR]: Failed to open grammar file \"{}\".\nDetails: {}",
+                    "[ERROR]: Failed to open grammar file {:?}.\nDetails: {}",
                     path, e
                 );
                 std::process::exit(1);
@@ -102,7 +103,7 @@ impl Grammar {
         let mut buf = String::new();
         if let Err(e) = file.read_to_string(&mut buf) {
             eprintln!(
-                "[ERROR]: Failed to read grammar file \"{}\".\nDetails: {}",
+                "[ERROR]: Failed to read grammar file {:?}.\nDetails: {}",
                 path, e
             );
             std::process::exit(1);

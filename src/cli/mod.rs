@@ -12,10 +12,24 @@ pub struct Args {
     /// convention is just made up by the author, and can be ignored without issue.
     /// Use --dump-default-grammar to view the default grammar
     pub file: Option<PathBuf>,
+    /// The max depth that the AST can have
+    #[arg(short, long, default_value = "10")]
+    pub depth: usize,
+    /// The amount of frames that will be rendered when in gif mode. This will always create a
+    /// loop in the interval of 0 to 2 pi, this just sets the amount of steps between these two
+    /// values.
+    #[arg(short, long, default_value = "255")]
+    pub frames: u32,
+    /// The images width
+    #[arg(short, long, default_value = "512")]
+    pub width: u32,
+    /// The images height
+    #[arg(short, long, default_value = "512")]
+    pub height: u32,
     /// Use a given seed. This assures that two images using the same grammar, and same seed, are
     /// identical
     #[arg(long)]
-    pub seed: Option<u64>,
+    pub seed: Option<String>,
     /// Dumps the seed used to create the image into STDOUT. This can be passed to kroyer with --seed
     /// to create the same image again
     #[arg(long)]
@@ -36,14 +50,8 @@ pub struct Args {
     /// A string can also be passed via STDIN without needing to set this flag
     #[arg(short, long)]
     pub grammar: Option<String>,
-    /// Creates a gif instead of a static png.
-    /// If not in this mode, T will be evaluated to 0.
-    /// This can also be implicitaly applied to the program by passing -o NAME.gif, without needing
-    /// to use this flag
-    #[arg(long)]
-    pub gif: bool,
-    /// Sets the path of the outputted image. Will default to out.png or out.gif, depending on the
-    /// current mode.
+    /// Sets the path of the outputted image. Will default to out.png or out.gif, depending on if
+    /// the variable t exists in the grammar rules.
     /// This can also be used to implicitally tell kroyer if it needs to use gif mode, by setting
     /// the file extension to `.gif`
     #[arg(short, long)]
