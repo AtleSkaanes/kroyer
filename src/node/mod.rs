@@ -122,7 +122,15 @@ impl Node {
             Node::Mult(lhs, rhs) => lhs.get_value(x, y, t) * rhs.get_value(x, y, t),
             Node::Add(rhs, lhs) => lhs.get_value(x, y, t) + rhs.get_value(x, y, t),
             Node::Sub(rhs, lhs) => lhs.get_value(x, y, t) - rhs.get_value(x, y, t),
-            Node::Div(lhs, rhs) => lhs.get_value(x, y, t) / rhs.get_value(x, y, t),
+            Node::Div(lhs, rhs) => {
+                let rhs_value = rhs.get_value(x, y, t);
+                lhs.get_value(x, y, t)
+                    / if rhs_value != 0. {
+                        rhs_value
+                    } else {
+                        f64::EPSILON
+                    }
+            }
             Node::Pow(lhs, rhs) => lhs.get_value(x, y, t).powf(rhs.get_value(x, y, t)),
             Node::Sqrt(val) => val.get_value(x, y, t).sqrt(),
             Node::Mod(lhs, rhs) => lhs.get_value(x, y, t) % rhs.get_value(x, y, t),
