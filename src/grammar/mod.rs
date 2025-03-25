@@ -124,8 +124,15 @@ impl Default for Grammar {
         let rules = vec![
             (NodeType::X, 1),
             (NodeType::Y, 1),
+            (NodeType::Literal, 1),
+            (NodeType::Mod, 3),
+            (NodeType::Sin, 5),
+            (NodeType::Tan, 4),
             (NodeType::Mult, 3),
-            (NodeType::Sin, 3),
+            (NodeType::Add, 3),
+            (NodeType::Sqrt, 3),
+            (NodeType::Max, 3),
+            (NodeType::If, 1),
         ];
 
         Grammar::new(rules)
