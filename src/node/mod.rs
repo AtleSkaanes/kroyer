@@ -16,7 +16,7 @@ pub enum NodeType {
     X,
     /// The y value of the current pixel
     Y,
-    /// A random value in the range `0..=1`
+    /// A random value in the range `-1..=1`
     Rand,
     /// A float literal
     Literal,
@@ -24,6 +24,8 @@ pub enum NodeType {
     Mult,
     /// Add two values
     Add,
+    /// Subtract two values
+    Sub,
     /// Divide a value with another
     Div,
     /// Raise a value to the power of another
@@ -34,6 +36,14 @@ pub enum NodeType {
     Max,
     /// Get the minimum value of two values
     Min,
+    /// Applies the `sin` function on the value
+    Sin,
+    /// Applies the `cos` function on the value
+    Cos,
+    /// Applies the `tan` function on the value
+    Tan,
+    /// Takes the absolute value of a value
+    Abs,
     /// A simple if statement
     If,
 }
@@ -52,7 +62,7 @@ pub enum Node {
     X,
     /// The y value of the current pixel
     Y,
-    /// A random value in the range `0..=1`. Picked at run time
+    /// A random value in the range `-1..=1`. Picked at run time
     Rand,
     /// A float literal. Picked randomly at creation time
     Literal(f64),
@@ -60,6 +70,8 @@ pub enum Node {
     Mult(NodePtr, NodePtr),
     /// Add two values
     Add(NodePtr, NodePtr),
+    /// Subtract two values
+    Sub(NodePtr, NodePtr),
     /// Divide a value with another
     Div(NodePtr, NodePtr),
     /// Raise a value to the power of another
@@ -70,6 +82,14 @@ pub enum Node {
     Max(NodePtr, NodePtr),
     /// Get the minimum value of two values
     Min(NodePtr, NodePtr),
+    /// Applies the `sin` function on the value
+    Sin(NodePtr),
+    /// Applies the `cos` function on the value
+    Cos(NodePtr),
+    /// Applies the `tan` function on the value
+    Tan(NodePtr),
+    /// Takes the absolute value of a value
+    Abs(NodePtr),
     /// A simple if statement
     If(IfNode),
 }
@@ -87,16 +107,21 @@ impl Node {
             Node::Y => y,
             Node::Rand => {
                 let mut rng = rand::rng();
-                rng.random_range(0.0..=1.0)
+                rng.random_range(-1.0..=1.0)
             }
             Node::Literal(float) => *float,
             Node::Mult(lhs, rhs) => lhs.get_value(x, y) * rhs.get_value(x, y),
             Node::Add(rhs, lhs) => lhs.get_value(x, y) + rhs.get_value(x, y),
+            Node::Sub(rhs, lhs) => lhs.get_value(x, y) - rhs.get_value(x, y),
             Node::Div(lhs, rhs) => lhs.get_value(x, y) / rhs.get_value(x, y),
             Node::Pow(lhs, rhs) => lhs.get_value(x, y).powf(rhs.get_value(x, y)),
-            Node::Sqrt(lhs) => lhs.get_value(x, y).sqrt(),
+            Node::Sqrt(val) => val.get_value(x, y).sqrt(),
             Node::Max(lhs, rhs) => lhs.get_value(x, y).max(rhs.get_value(x, y)),
             Node::Min(lhs, rhs) => lhs.get_value(x, y).min(rhs.get_value(x, y)),
+            Node::Sin(val) => val.get_value(x, y).sin(),
+            Node::Cos(val) => val.get_value(x, y).cos(),
+            Node::Tan(val) => val.get_value(x, y).tan(),
+            Node::Abs(val) => val.get_value(x, y).abs(),
             Node::If(if_node) => {
                 if if_node
                     .operator
@@ -127,7 +152,7 @@ impl Node {
             NodeType::X => Box::new(Self::X),
             NodeType::Y => Box::new(Self::Y),
             NodeType::Rand => Box::new(Self::Rand),
-            NodeType::Literal => Box::new(Self::Literal(grammar.rng.random_range(0.0..=1.0))),
+            NodeType::Literal => Box::new(Self::Literal(grammar.rng.random_range(-1.0..=1.0))),
             _ => unreachable!(),
         }
     }
@@ -147,14 +172,19 @@ impl Node {
             NodeType::X => Node::X,
             NodeType::Y => Node::Y,
             NodeType::Rand => Node::Rand,
-            NodeType::Literal => Node::Literal(grammar.rng.random_range(0.0..=1.0)),
+            NodeType::Literal => Node::Literal(grammar.rng.random_range(-1.0..=1.0)),
             NodeType::Mult => Node::Mult(gen_node(), gen_node()),
             NodeType::Add => Node::Add(gen_node(), gen_node()),
+            NodeType::Sub => Node::Sub(gen_node(), gen_node()),
             NodeType::Div => Node::Div(gen_node(), gen_node()),
             NodeType::Pow => Node::Pow(gen_node(), gen_node()),
             NodeType::Sqrt => Node::Sqrt(gen_node()),
             NodeType::Max => Node::Max(gen_node(), gen_node()),
             NodeType::Min => Node::Min(gen_node(), gen_node()),
+            NodeType::Sin => Node::Sin(gen_node()),
+            NodeType::Cos => Node::Cos(gen_node()),
+            NodeType::Tan => Node::Tan(gen_node()),
+            NodeType::Abs => Node::Abs(gen_node()),
             NodeType::If => Node::If(IfNode {
                 lhs: gen_node(),
                 rhs: gen_node(),
@@ -177,15 +207,20 @@ impl Display for Node {
             Node::Literal(float) => write!(f, "{}", float),
             Node::Mult(lhs, rhs) => write!(f, "mult({}, {})", lhs, rhs),
             Node::Add(lhs, rhs) => write!(f, "add({}, {})", lhs, rhs),
+            Node::Sub(lhs, rhs) => write!(f, "sub({}, {})", lhs, rhs),
             Node::Div(lhs, rhs) => write!(f, "div({}, {})", lhs, rhs),
             Node::Pow(lhs, rhs) => write!(f, "pow({}, {})", lhs, rhs),
-            Node::Sqrt(lhs) => write!(f, "sqrt({})", lhs),
+            Node::Sqrt(val) => write!(f, "sqrt({})", val),
             Node::Max(lhs, rhs) => write!(f, "max({}, {})", lhs, rhs),
             Node::Min(lhs, rhs) => write!(f, "min({}, {})", lhs, rhs),
+            Node::Sin(val) => write!(f, "sin({})", val),
+            Node::Cos(val) => write!(f, "cos({})", val),
+            Node::Tan(val) => write!(f, "tan({})", val),
+            Node::Abs(val) => write!(f, "abs({})", val),
             Node::If(if_node) => write!(
                 f,
-                "{} {} {} : {} ? {}",
-                if_node.lhs, if_node.rhs, if_node.operator, if_node.on_true, if_node.on_false
+                "({} {} {} : {} ? {})",
+                if_node.lhs, if_node.operator, if_node.rhs, if_node.on_true, if_node.on_false
             ),
         }
     }
@@ -235,7 +270,7 @@ impl Operator {
             0 => Self::LessThan,
             1 => Self::GreaterThan,
             2 => Self::Equals,
-            4 => Self::NotEquals,
+            3 => Self::NotEquals,
             _ => unreachable!(),
         }
     }
