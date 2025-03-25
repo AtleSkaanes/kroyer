@@ -1,6 +1,7 @@
 use grammar::Grammar;
 use node::{NodeType, generate};
 
+mod cli;
 pub mod grammar;
 mod img;
 pub mod node;
