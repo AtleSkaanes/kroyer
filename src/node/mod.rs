@@ -2,7 +2,7 @@ pub mod generate;
 
 use std::fmt::Display;
 
-use generate::Grammar;
+use crate::grammar::Grammar;
 use rand::{Rng, seq::IndexedRandom};
 
 pub type NodeTree = (NodePtr, NodePtr, NodePtr);
@@ -56,6 +56,35 @@ impl NodeType {
     /// If the current node doesn't have child branches, and can therefore be collapsed
     pub fn is_end(&self) -> bool {
         matches!(self, Self::X | Self::Y | Self::Rand | Self::Literal)
+    }
+}
+
+impl TryFrom<&str> for NodeType {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "x" => Ok(Self::X),
+            "y" => Ok(Self::Y),
+            "t" => Ok(Self::T),
+            "rand" => Ok(Self::Rand),
+            "literal" => Ok(Self::Literal),
+            "mult" => Ok(Self::Mult),
+            "add" => Ok(Self::Add),
+            "sub" => Ok(Self::Sub),
+            "div" => Ok(Self::Div),
+            "pow" => Ok(Self::Pow),
+            "sqrt" => Ok(Self::Sqrt),
+            "mod" => Ok(Self::Mod),
+            "max" => Ok(Self::Max),
+            "min" => Ok(Self::Min),
+            "sin" => Ok(Self::Sin),
+            "cos" => Ok(Self::Cos),
+            "tan" => Ok(Self::Tan),
+            "abs" => Ok(Self::Abs),
+            "if" => Ok(Self::If),
+            _ => Err(()),
+        }
     }
 }
 
