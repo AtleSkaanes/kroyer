@@ -27,15 +27,16 @@ pub struct Args {
     #[arg(short, long, default_value = "512")]
     pub height: u32,
     /// Use a given seed. This assures that two images using the same grammar, and same seed, are
-    /// identical
+    /// identical.
+    /// When this argument is left empty, it will use STDIN to get the seed.
     #[arg(long)]
-    pub seed: Option<String>,
+    pub seed: Option<Option<String>>,
     /// Dumps the seed used to create the image into STDOUT. This can be passed to kroyer with --seed
     /// to create the same image again
     #[arg(long)]
     pub dump_seed: bool,
     /// Dumps the AST used to create the image into STDOUT.
-    /// To create this exact image, this can be passed to kroyer with the --use-ast flag,
+    /// To create this exact image, this can be passed to kroyer with the --ast flag,
     /// either via STDIN or via a file
     #[arg(long)]
     pub dump_ast: bool,
@@ -50,6 +51,11 @@ pub struct Args {
     /// A string can also be passed via STDIN without needing to set this flag
     #[arg(short, long)]
     pub grammar: Option<String>,
+    /// Use a specific AST to create an image.
+    /// This flag takes a file, which holds the AST, or if it is left empty, it will read the AST
+    /// from STDIN
+    #[arg(long)]
+    pub ast: Option<Option<PathBuf>>,
     /// Sets the path of the outputted image. Will default to out.png or out.gif, depending on if
     /// the variable t exists in the grammar rules.
     /// This can also be used to implicitally tell kroyer if it needs to use gif mode, by setting

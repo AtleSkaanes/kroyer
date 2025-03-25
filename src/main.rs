@@ -1,8 +1,4 @@
-use std::{
-    io::{BufRead, IsTerminal},
-    path::PathBuf,
-    str::FromStr,
-};
+use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
 use grammar::Grammar;
@@ -14,6 +10,7 @@ use rand_chacha::ChaCha20Rng;
 mod cli;
 pub mod grammar;
 mod img;
+pub mod io;
 pub mod node;
 
 fn main() {
@@ -25,16 +22,13 @@ fn main() {
         std::process::exit(0);
     }
 
+    let stdin_stolen = matches!(args.seed, Some(None)) || matches!(args.ast, Some(None));
+
     let mut grammar = match args.file {
         Some(path) => Grammar::parse_from_file(path),
         None => {
-            if !std::io::stdin().is_terminal() {
-                let str = std::io::stdin()
-                    .lock()
-                    .lines()
-                    .fold(String::new(), |acc, line| {
-                        acc + &line.unwrap_or_default() + "\n"
-                    });
+            if !stdin_stolen {
+                let str = io::read_stdin().unwrap_or("".to_owned());
                 Grammar::parse_from_str(&str)
             } else {
                 Grammar::default()
@@ -42,8 +36,12 @@ fn main() {
         }
     };
 
-    if let Some(seed_str) = args.seed {
-        let seed = match U256::from_str(&seed_str) {
+    if let Some(seed_opt) = args.seed {
+        let seed_str = match seed_opt {
+            Some(str) => str,
+            None => io::read_stdin().unwrap_or("".to_owned()),
+        };
+        let seed = match U256::from_str(seed_str.trim()) {
             Ok(num) => num,
             Err(e) => {
                 eprintln!(
