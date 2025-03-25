@@ -10,12 +10,14 @@ pub type NodeTree = (NodePtr, NodePtr, NodePtr);
 pub type NodePtr = Box<Node>;
 
 /// A simple enum which holds the types of nodes available
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum NodeType {
     /// The x value of the current pixel
     X,
     /// The y value of the current pixel
     Y,
+    /// The current time. Goes from 0 to PI. Defaults to 1 if not in gif mode
+    T,
     /// A random value in the range `-1..=1`
     Rand,
     /// A float literal
@@ -64,6 +66,8 @@ pub enum Node {
     X,
     /// The y value of the current pixel
     Y,
+    /// The current time. Goes from 0 to PI. Defaults to 1 if not in gif mode
+    T,
     /// A random value in the range `-1..=1`. Picked at run time
     Rand,
     /// A float literal. Picked randomly at creation time
@@ -105,36 +109,37 @@ impl Node {
     }
 
     /// Collapse this branch into a value
-    pub fn get_value(&self, x: f64, y: f64) -> f64 {
+    pub fn get_value(&self, x: f64, y: f64, t: f64) -> f64 {
         match self {
             Node::X => x,
             Node::Y => y,
+            Node::T => t,
             Node::Rand => {
                 let mut rng = rand::rng();
                 rng.random_range(-1.0..=1.0)
             }
             Node::Literal(float) => *float,
-            Node::Mult(lhs, rhs) => lhs.get_value(x, y) * rhs.get_value(x, y),
-            Node::Add(rhs, lhs) => lhs.get_value(x, y) + rhs.get_value(x, y),
-            Node::Sub(rhs, lhs) => lhs.get_value(x, y) - rhs.get_value(x, y),
-            Node::Div(lhs, rhs) => lhs.get_value(x, y) / rhs.get_value(x, y),
-            Node::Pow(lhs, rhs) => lhs.get_value(x, y).powf(rhs.get_value(x, y)),
-            Node::Sqrt(val) => val.get_value(x, y).sqrt(),
-            Node::Mod(lhs, rhs) => lhs.get_value(x, y) % rhs.get_value(x, y),
-            Node::Max(lhs, rhs) => lhs.get_value(x, y).max(rhs.get_value(x, y)),
-            Node::Min(lhs, rhs) => lhs.get_value(x, y).min(rhs.get_value(x, y)),
-            Node::Sin(val) => val.get_value(x, y).sin(),
-            Node::Cos(val) => val.get_value(x, y).cos(),
-            Node::Tan(val) => val.get_value(x, y).tan(),
-            Node::Abs(val) => val.get_value(x, y).abs(),
+            Node::Mult(lhs, rhs) => lhs.get_value(x, y, t) * rhs.get_value(x, y, t),
+            Node::Add(rhs, lhs) => lhs.get_value(x, y, t) + rhs.get_value(x, y, t),
+            Node::Sub(rhs, lhs) => lhs.get_value(x, y, t) - rhs.get_value(x, y, t),
+            Node::Div(lhs, rhs) => lhs.get_value(x, y, t) / rhs.get_value(x, y, t),
+            Node::Pow(lhs, rhs) => lhs.get_value(x, y, t).powf(rhs.get_value(x, y, t)),
+            Node::Sqrt(val) => val.get_value(x, y, t).sqrt(),
+            Node::Mod(lhs, rhs) => lhs.get_value(x, y, t) % rhs.get_value(x, y, t),
+            Node::Max(lhs, rhs) => lhs.get_value(x, y, t).max(rhs.get_value(x, y, t)),
+            Node::Min(lhs, rhs) => lhs.get_value(x, y, t).min(rhs.get_value(x, y, t)),
+            Node::Sin(val) => val.get_value(x, y, t).sin(),
+            Node::Cos(val) => val.get_value(x, y, t).cos(),
+            Node::Tan(val) => val.get_value(x, y, t).tan(),
+            Node::Abs(val) => val.get_value(x, y, t).abs(),
             Node::If(if_node) => {
-                if if_node
-                    .operator
-                    .eval(if_node.lhs.get_value(x, y), if_node.rhs.get_value(x, y))
-                {
-                    if_node.on_true.get_value(x, y)
+                if if_node.operator.eval(
+                    if_node.lhs.get_value(x, y, t),
+                    if_node.rhs.get_value(x, y, t),
+                ) {
+                    if_node.on_true.get_value(x, y, t)
                 } else {
-                    if_node.on_false.get_value(x, y)
+                    if_node.on_false.get_value(x, y, t)
                 }
             }
         }
@@ -143,7 +148,7 @@ impl Node {
     /// Get a random terminable node.
     pub fn get_rand_end(grammar: &mut Grammar) -> NodePtr {
         let ends = grammar
-            .grammar
+            .rules
             .iter()
             .filter_map(|x| x.0.is_end().then_some(x.0))
             .collect::<Vec<_>>();
@@ -174,6 +179,7 @@ impl Node {
         let mut gen_node = || Self::gen_rand(grammar, new_depth);
 
         let node = match choice {
+            NodeType::T => Node::T,
             NodeType::X => Node::X,
             NodeType::Y => Node::Y,
             NodeType::Rand => Node::Rand,
@@ -209,6 +215,7 @@ impl Display for Node {
         match self {
             Node::X => write!(f, "x"),
             Node::Y => write!(f, "y"),
+            Node::T => write!(f, "t"),
             Node::Rand => write!(f, "RAND"),
             Node::Literal(float) => write!(f, "{}", float),
             Node::Mult(lhs, rhs) => write!(f, "mult({}, {})", lhs, rhs),
