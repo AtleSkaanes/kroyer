@@ -16,7 +16,7 @@ pub enum NodeType {
     X,
     /// The y value of the current pixel
     Y,
-    /// The current time. Goes from 0 to PI. Defaults to 1 if not in gif mode
+    /// The current time. Goes from 0 to PI. Defaults to 0 if not in gif mode
     T,
     /// A random value in the range `-1..=1`
     Rand,
@@ -95,7 +95,7 @@ pub enum Node {
     X,
     /// The y value of the current pixel
     Y,
-    /// The current time. Goes from 0 to PI. Defaults to 1 if not in gif mode
+    /// The current time. Goes from 0 to PI. Defaults to 0 if not in gif mode
     T,
     /// A random value in the range `-1..=1`. Picked at run time
     Rand,

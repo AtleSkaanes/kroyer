@@ -5,7 +5,7 @@ use image::{ImageBuffer, Rgba, codecs::gif::Repeat};
 use crate::node::NodePtr;
 
 pub fn gen_img(path: &str, width: u32, height: u32, tree: &(NodePtr, NodePtr, NodePtr)) {
-    let img = get_img(width, height, 1., tree);
+    let img = get_img(width, height, 0., tree);
     if let Err(e) = img.save(path) {
         eprintln!(
             "[ERROR]: Failed to save image to \"{}\".\nDetails: {}",
