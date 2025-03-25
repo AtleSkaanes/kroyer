@@ -88,6 +88,33 @@ impl TryFrom<&str> for NodeType {
     }
 }
 
+impl Display for NodeType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            NodeType::X => "x",
+            NodeType::Y => "y",
+            NodeType::T => "t",
+            NodeType::Rand => "rand",
+            NodeType::Literal => "literal",
+            NodeType::Mult => "mult",
+            NodeType::Add => "add",
+            NodeType::Sub => "sub",
+            NodeType::Div => "div",
+            NodeType::Pow => "pow",
+            NodeType::Sqrt => "sqrt",
+            NodeType::Mod => "mod",
+            NodeType::Max => "max",
+            NodeType::Min => "min",
+            NodeType::Sin => "sin",
+            NodeType::Cos => "cos",
+            NodeType::Tan => "tan",
+            NodeType::Abs => "abs",
+            NodeType::If => "if",
+        };
+        write!(f, "{}", name)
+    }
+}
+
 /// A node which will form a tree, that can be collapsed into a single value
 #[derive(Clone, Debug)]
 pub enum Node {

@@ -1,6 +1,4 @@
-pub mod parse;
-
-use std::{fs::OpenOptions, io::Read};
+use std::{fmt::Display, fs::OpenOptions, io::Read};
 
 use rand::Rng;
 
@@ -13,9 +11,9 @@ pub struct Grammar {
 }
 
 impl Grammar {
-    pub fn new(grammar: Vec<(NodeType, usize)>) -> Self {
+    pub fn new(rules: Vec<(NodeType, usize)>) -> Self {
         Self {
-            rules: grammar,
+            rules,
             rng: rand::rng(),
         }
     }
@@ -117,5 +115,28 @@ impl Grammar {
         }
 
         Self::parse_from_str(&buf)
+    }
+}
+
+impl Default for Grammar {
+    fn default() -> Self {
+        let rules = vec![
+            (NodeType::X, 1),
+            (NodeType::Y, 1),
+            (NodeType::Mult, 3),
+            (NodeType::Sin, 3),
+        ];
+
+        Grammar::new(rules)
+    }
+}
+
+impl Display for Grammar {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "# DEFAULT GRAMMAR")?;
+        for (node, weight) in &self.rules {
+            write!(f, "{}: {}", node, weight)?;
+        }
+        Ok(())
     }
 }
