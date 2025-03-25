@@ -133,9 +133,8 @@ impl Default for Grammar {
 
 impl Display for Grammar {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "# DEFAULT GRAMMAR")?;
         for (node, weight) in &self.rules {
-            write!(f, "{}: {}", node, weight)?;
+            writeln!(f, "{}: {}", node, weight)?;
         }
         Ok(())
     }

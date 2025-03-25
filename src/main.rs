@@ -1,3 +1,4 @@
+use clap::Parser;
 use grammar::Grammar;
 use node::{NodeType, generate};
 
@@ -7,27 +8,12 @@ mod img;
 pub mod node;
 
 fn main() {
-    //let mut grammar = Grammar::new(vec![
-    //    (NodeType::X, 1),
-    //    (NodeType::Y, 1),
-    //    (NodeType::T, 3),
-    //    (NodeType::Literal, 1),
-    //    (NodeType::Rand, 1),
-    //    (NodeType::Add, 4),
-    //    (NodeType::Sub, 4),
-    //    (NodeType::Mult, 4),
-    //    (NodeType::Div, 4),
-    //    (NodeType::Sqrt, 3),
-    //    (NodeType::Pow, 3),
-    //    (NodeType::Max, 3),
-    //    (NodeType::Min, 3),
-    //    (NodeType::Sin, 5),
-    //    (NodeType::Tan, 5),
-    //    (NodeType::Cos, 5),
-    //    (NodeType::Mod, 5),
-    //    (NodeType::Abs, 1),
-    //    (NodeType::If, 3),
-    //]);
+    let args = cli::Args::parse();
+
+    if args.dump_default_grammar {
+        print!("# DEFAULT GRAMMAR\n\n{}", Grammar::default());
+        std::process::exit(0);
+    }
 
     let mut grammar = Grammar::parse_from_file("./test.kroyer");
 
