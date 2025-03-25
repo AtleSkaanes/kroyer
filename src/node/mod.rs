@@ -32,6 +32,8 @@ pub enum NodeType {
     Pow,
     /// Take the square root of a value
     Sqrt,
+    /// Mods one value with another
+    Mod,
     /// Get the max value of two values
     Max,
     /// Get the minimum value of two values
@@ -78,6 +80,8 @@ pub enum Node {
     Pow(NodePtr, NodePtr),
     /// Take the square root of a value
     Sqrt(NodePtr),
+    /// Mods one value with another
+    Mod(NodePtr, NodePtr),
     /// Get the max value of two values
     Max(NodePtr, NodePtr),
     /// Get the minimum value of two values
@@ -116,6 +120,7 @@ impl Node {
             Node::Div(lhs, rhs) => lhs.get_value(x, y) / rhs.get_value(x, y),
             Node::Pow(lhs, rhs) => lhs.get_value(x, y).powf(rhs.get_value(x, y)),
             Node::Sqrt(val) => val.get_value(x, y).sqrt(),
+            Node::Mod(lhs, rhs) => lhs.get_value(x, y) % rhs.get_value(x, y),
             Node::Max(lhs, rhs) => lhs.get_value(x, y).max(rhs.get_value(x, y)),
             Node::Min(lhs, rhs) => lhs.get_value(x, y).min(rhs.get_value(x, y)),
             Node::Sin(val) => val.get_value(x, y).sin(),
@@ -179,6 +184,7 @@ impl Node {
             NodeType::Div => Node::Div(gen_node(), gen_node()),
             NodeType::Pow => Node::Pow(gen_node(), gen_node()),
             NodeType::Sqrt => Node::Sqrt(gen_node()),
+            NodeType::Mod => Node::Mod(gen_node(), gen_node()),
             NodeType::Max => Node::Max(gen_node(), gen_node()),
             NodeType::Min => Node::Min(gen_node(), gen_node()),
             NodeType::Sin => Node::Sin(gen_node()),
@@ -211,6 +217,7 @@ impl Display for Node {
             Node::Div(lhs, rhs) => write!(f, "div({}, {})", lhs, rhs),
             Node::Pow(lhs, rhs) => write!(f, "pow({}, {})", lhs, rhs),
             Node::Sqrt(val) => write!(f, "sqrt({})", val),
+            Node::Mod(lhs, rhs) => write!(f, "mod({}, {})", lhs, rhs),
             Node::Max(lhs, rhs) => write!(f, "max({}, {})", lhs, rhs),
             Node::Min(lhs, rhs) => write!(f, "min({}, {})", lhs, rhs),
             Node::Sin(val) => write!(f, "sin({})", val),

@@ -23,6 +23,7 @@ fn main() {
         (NodeType::Sin, 5),
         (NodeType::Tan, 5),
         //(NodeType::Cos, 5),
+        (NodeType::Mod, 5),
         (NodeType::Abs, 1),
         (NodeType::If, 1),
     ]);
