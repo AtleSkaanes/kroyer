@@ -1,22 +1,18 @@
 use std::{fmt::Display, fs::OpenOptions, io::Read, path::PathBuf};
 
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha20Rng;
+use rand::Rng;
 
-use crate::node::NodeType;
+use crate::{node::NodeType, rng};
 
 /// Holds the node and the weigth of the node in the tree
+#[derive(Clone, Debug)]
 pub struct Grammar {
     pub rules: Vec<(NodeType, usize)>,
-    pub rng: ChaCha20Rng,
 }
 
 impl Grammar {
     pub fn new(rules: Vec<(NodeType, usize)>) -> Self {
-        Self {
-            rules,
-            rng: ChaCha20Rng::from_os_rng(),
-        }
+        Self { rules }
     }
 
     pub fn pick(&mut self) -> NodeType {
@@ -26,7 +22,7 @@ impl Grammar {
             return NodeType::Literal;
         }
 
-        let choice = self.rng.random_range(0..total);
+        let choice = rng::get_rng().random_range(0..total);
 
         let mut acc = 0;
         for rule in &self.rules {

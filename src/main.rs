@@ -4,14 +4,13 @@ use clap::Parser;
 use grammar::Grammar;
 use node::{NodeType, generate};
 use primitive_types::U256;
-use rand::SeedableRng;
-use rand_chacha::ChaCha20Rng;
 
 mod cli;
 pub mod grammar;
 mod img;
 pub mod io;
 pub mod node;
+pub mod rng;
 
 fn main() {
     let args = cli::Args::parse();
@@ -28,8 +27,10 @@ fn main() {
         Some(path) => Grammar::parse_from_file(path),
         None => {
             if !stdin_stolen {
-                let str = io::read_stdin().unwrap_or("".to_owned());
-                Grammar::parse_from_str(&str)
+                match io::read_stdin() {
+                    Some(str) => Grammar::parse_from_str(&str),
+                    None => Grammar::default(),
+                }
             } else {
                 Grammar::default()
             }
@@ -52,14 +53,15 @@ fn main() {
             }
         };
 
-        grammar.rng = ChaCha20Rng::from_seed(seed.to_little_endian());
+        rng::set_seed(seed);
     }
 
     if args.dump_seed {
-        println!(
-            "SEED: {:x}",
-            U256::from_little_endian(&grammar.rng.get_seed())
-        )
+        println!("SEED: {:x}", rng::get_seed())
+    }
+
+    if args.dump_grammar {
+        println!("# CURRENT GRAMMAR\n{}", grammar);
     }
 
     let tree = generate::generate_tree(&mut grammar, args.depth);

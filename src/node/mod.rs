@@ -2,7 +2,7 @@ pub mod generate;
 
 use std::fmt::Display;
 
-use crate::grammar::Grammar;
+use crate::{grammar::Grammar, rng};
 use rand::{Rng, seq::IndexedRandom};
 
 pub type NodeTree = (NodePtr, NodePtr, NodePtr);
@@ -166,44 +166,43 @@ impl Node {
 
     /// Collapse this branch into a value
     pub fn get_value(&self, x: f64, y: f64, t: f64) -> f64 {
+        let get_val = |node: &Node| node.get_value(x, y, t);
+
         match self {
             Node::X => x,
             Node::Y => y,
             Node::T => t,
-            Node::Rand => {
-                let mut rng = rand::rng();
-                rng.random_range(-1.0..=1.0)
-            }
+            Node::Rand => rng::get_rng().random_range(-1.0..=1.0),
             Node::Literal(float) => *float,
-            Node::Mult(lhs, rhs) => lhs.get_value(x, y, t) * rhs.get_value(x, y, t),
-            Node::Add(rhs, lhs) => lhs.get_value(x, y, t) + rhs.get_value(x, y, t),
-            Node::Sub(rhs, lhs) => lhs.get_value(x, y, t) - rhs.get_value(x, y, t),
+            Node::Mult(lhs, rhs) => get_val(lhs) * get_val(rhs),
+            Node::Add(rhs, lhs) => get_val(lhs) + get_val(rhs),
+            Node::Sub(rhs, lhs) => get_val(lhs) - get_val(rhs),
             Node::Div(lhs, rhs) => {
-                let rhs_value = rhs.get_value(x, y, t);
-                lhs.get_value(x, y, t)
+                let rhs_value = get_val(rhs);
+                get_val(lhs)
                     / if rhs_value != 0. {
                         rhs_value
                     } else {
                         f64::EPSILON
                     }
             }
-            Node::Pow(lhs, rhs) => lhs.get_value(x, y, t).powf(rhs.get_value(x, y, t)),
-            Node::Sqrt(val) => val.get_value(x, y, t).sqrt(),
-            Node::Mod(lhs, rhs) => lhs.get_value(x, y, t) % rhs.get_value(x, y, t),
-            Node::Max(lhs, rhs) => lhs.get_value(x, y, t).max(rhs.get_value(x, y, t)),
-            Node::Min(lhs, rhs) => lhs.get_value(x, y, t).min(rhs.get_value(x, y, t)),
-            Node::Sin(val) => val.get_value(x, y, t).sin(),
-            Node::Cos(val) => val.get_value(x, y, t).cos(),
-            Node::Tan(val) => val.get_value(x, y, t).tan(),
-            Node::Abs(val) => val.get_value(x, y, t).abs(),
+            Node::Pow(lhs, rhs) => get_val(lhs).powf(get_val(rhs)),
+            Node::Sqrt(val) => get_val(val).sqrt(),
+            Node::Mod(lhs, rhs) => get_val(lhs) % get_val(rhs),
+            Node::Max(lhs, rhs) => get_val(lhs).max(get_val(rhs)),
+            Node::Min(lhs, rhs) => get_val(lhs).min(get_val(rhs)),
+            Node::Sin(val) => get_val(val).sin(),
+            Node::Cos(val) => get_val(val).cos(),
+            Node::Tan(val) => get_val(val).tan(),
+            Node::Abs(val) => get_val(val).abs(),
             Node::If(if_node) => {
-                if if_node.operator.eval(
-                    if_node.lhs.get_value(x, y, t),
-                    if_node.rhs.get_value(x, y, t),
-                ) {
-                    if_node.on_true.get_value(x, y, t)
+                if if_node
+                    .operator
+                    .eval(get_val(&if_node.lhs), get_val(&if_node.rhs))
+                {
+                    get_val(&if_node.on_true)
                 } else {
-                    if_node.on_false.get_value(x, y, t)
+                    get_val(&if_node.on_false)
                 }
             }
         }
@@ -217,7 +216,7 @@ impl Node {
             .filter_map(|x| x.0.is_end().then_some(x.0))
             .collect::<Vec<_>>();
 
-        let Some(choice) = ends.choose(&mut grammar.rng) else {
+        let Some(choice) = ends.choose(rng::get_rng()) else {
             eprintln!("[ERROR]: Grammar needs to include at least one element that is terminable");
             std::process::exit(1);
         };
@@ -226,7 +225,7 @@ impl Node {
             NodeType::X => Box::new(Self::X),
             NodeType::Y => Box::new(Self::Y),
             NodeType::Rand => Box::new(Self::Rand),
-            NodeType::Literal => Box::new(Self::Literal(grammar.rng.random_range(-1.0..=1.0))),
+            NodeType::Literal => Box::new(Self::Literal(rng::get_rng().random_range(-1.0..=1.0))),
             _ => unreachable!(),
         }
     }
@@ -241,13 +240,14 @@ impl Node {
         let new_depth = curr_depth - 1;
 
         let mut gen_node = || Self::gen_rand(grammar, new_depth);
+        let gen_operator = || Operator::as_list().choose(rng::get_rng()).cloned().unwrap();
 
         let node = match choice {
             NodeType::T => Node::T,
             NodeType::X => Node::X,
             NodeType::Y => Node::Y,
             NodeType::Rand => Node::Rand,
-            NodeType::Literal => Node::Literal(grammar.rng.random_range(-1.0..=1.0)),
+            NodeType::Literal => Node::Literal(rng::get_rng().random_range(-1.0..=1.0)),
             NodeType::Mult => Node::Mult(gen_node(), gen_node()),
             NodeType::Add => Node::Add(gen_node(), gen_node()),
             NodeType::Sub => Node::Sub(gen_node(), gen_node()),
@@ -264,7 +264,7 @@ impl Node {
             NodeType::If => Node::If(IfNode {
                 lhs: gen_node(),
                 rhs: gen_node(),
-                operator: Operator::pick_rand(),
+                operator: gen_operator().clone(),
                 on_true: gen_node(),
                 on_false: gen_node(),
             }),
@@ -340,17 +340,13 @@ impl Operator {
         }
     }
 
-    pub fn pick_rand() -> Self {
-        const COUNT: u8 = 4;
-
-        let mut rng = rand::rng();
-        match rng.random_range(0..COUNT) {
-            0 => Self::LessThan,
-            1 => Self::GreaterThan,
-            2 => Self::Equals,
-            3 => Self::NotEquals,
-            _ => unreachable!(),
-        }
+    pub fn as_list() -> [Self; 4] {
+        [
+            Self::LessThan,
+            Self::GreaterThan,
+            Self::Equals,
+            Self::NotEquals,
+        ]
     }
 }
 
