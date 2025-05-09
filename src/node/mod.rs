@@ -1,12 +1,9 @@
-pub mod generate;
+pub mod ast;
 
 use std::fmt::Display;
 
 use crate::{grammar::Grammar, rng};
 use rand::{Rng, seq::IndexedRandom};
-
-pub type NodeTree = (NodePtr, NodePtr, NodePtr);
-
 pub type NodePtr = Box<Node>;
 
 /// A simple enum which holds the types of nodes available
@@ -56,6 +53,31 @@ impl NodeType {
     /// If the current node doesn't have child branches, and can therefore be collapsed
     pub fn is_end(&self) -> bool {
         matches!(self, Self::X | Self::Y | Self::Rand | Self::Literal)
+    }
+
+    /// Gets the number of arguments for the `Node` with this `NodeType`
+    pub fn arg_num(&self) -> usize {
+        match self {
+            NodeType::X => 0,
+            NodeType::Y => 0,
+            NodeType::T => 0,
+            NodeType::Rand => 0,
+            NodeType::Literal => 0,
+            NodeType::Mult => 2,
+            NodeType::Add => 2,
+            NodeType::Sub => 2,
+            NodeType::Div => 2,
+            NodeType::Pow => 2,
+            NodeType::Sqrt => 1,
+            NodeType::Mod => 2,
+            NodeType::Max => 2,
+            NodeType::Min => 2,
+            NodeType::Sin => 1,
+            NodeType::Cos => 1,
+            NodeType::Tan => 1,
+            NodeType::Abs => 1,
+            NodeType::If => 5,
+        }
     }
 }
 
@@ -297,7 +319,7 @@ impl Display for Node {
             Node::Abs(val) => write!(f, "abs({})", val),
             Node::If(if_node) => write!(
                 f,
-                "({} {} {} : {} ? {})",
+                "({} {} {} ? {} : {})",
                 if_node.lhs, if_node.operator, if_node.rhs, if_node.on_true, if_node.on_false
             ),
         }
@@ -318,7 +340,7 @@ pub struct IfNode {
     on_false: NodePtr,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Operator {
     /// `lhs < rhs`
     LessThan,
@@ -347,6 +369,19 @@ impl Operator {
             Self::Equals,
             Self::NotEquals,
         ]
+    }
+}
+
+impl TryFrom<&str> for Operator {
+    type Error = ();
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "<" => Ok(Self::LessThan),
+            ">" => Ok(Self::GreaterThan),
+            "==" => Ok(Self::Equals),
+            "!=" => Ok(Self::NotEquals),
+            _ => Err(()),
+        }
     }
 }
 

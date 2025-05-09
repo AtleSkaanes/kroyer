@@ -21,10 +21,10 @@ pub struct Args {
     #[arg(short, long, default_value = "255")]
     pub frames: u32,
     /// The images width
-    #[arg(short, long, default_value = "512")]
+    #[arg(long, default_value = "512")]
     pub width: u32,
     /// The images height
-    #[arg(short, long, default_value = "512")]
+    #[arg(long, default_value = "512")]
     pub height: u32,
     /// Use a given seed. This assures that two images using the same grammar, and same seed, are
     /// identical.
